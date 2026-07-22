@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spotify Clone · Proyecto de clase — Tecnologías en Internet</title>
+<style>
+  :root{
+    --verde:#1db954; --verde-hover:#1ed760;
+    --negro:#000000; --fondo:#121212; --panel:#181818; --panel-hover:#282828;
+    --tile:#2a2a2a; --texto:#ffffff; --gris:#b3b3b3; --linea:#2a2a2a;
+    --player-h:84px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+    background:var(--fondo); color:var(--texto);
+    display:grid; grid-template-columns:240px 1fr; grid-template-rows:1fr var(--player-h);
+    height:100vh; height:100dvh; overflow:hidden;
+  }
+
+  /* ============ SIDEBAR ============ */
+  aside{
+    grid-row:1; grid-column:1; background:var(--negro);
+    padding:22px 12px; display:flex; flex-direction:column; gap:8px; overflow-y:auto;
+  }
+  .logo{display:flex; align-items:center; gap:10px; padding:0 12px 14px}
+  .logo-mark{
+    width:36px; height:36px; border-radius:50%; background:var(--verde);
+    display:grid; place-items:center; color:#000; flex:none;
+  }
+  .logo b{font-size:1.05rem; letter-spacing:.2px}
+  .logo small{display:block; color:var(--gris); font-size:.68rem; font-weight:400}
+  nav a{
+    display:flex; align-items:center; gap:14px; padding:9px 12px; border-radius:6px;
+    color:var(--gris); text-decoration:none; font-weight:600; font-size:.92rem;
+    transition:color .15s;
+  }
+  nav a:hover,nav a.activo{color:var(--texto)}
+  nav a.activo{background:var(--tile)}
+  nav svg{flex:none}
+  .sep{border:none; border-top:1px solid var(--linea); margin:10px 12px}
+  .pl-titulo{color:var(--gris); font-size:.72rem; letter-spacing:.12em; padding:2px 12px 6px; font-weight:700}
+  .pl{display:flex; flex-direction:column}
+  .pl a{
+    color:var(--gris); text-decoration:none; padding:6px 12px; font-size:.87rem;
+    border-radius:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .pl a:hover{color:var(--texto)}
+
+  /* ============ MAIN ============ */
+  main{grid-row:1; grid-column:2; overflow-y:auto; overflow-x:hidden; min-width:0; scroll-behavior:smooth}
+  .hero{
+    background:linear-gradient(135deg,#1f3a2d 0%,var(--fondo) 55%),
+               linear-gradient(215deg,#0e3d2e 0%,var(--fondo) 60%);
+    background-blend-mode:screen;
+    padding:26px 28px 20px;
+  }
+  .hero h1{font-size:clamp(1.5rem,3vw,2.1rem); font-weight:800; margin-bottom:16px}
+  .accesos{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px}
+  .acceso{
+    display:flex; align-items:center; gap:0; background:rgba(255,255,255,.08);
+    border-radius:6px; overflow:hidden; cursor:pointer; border:none; text-align:left;
+    color:var(--texto); font-weight:700; font-size:.9rem; transition:background .2s;
+    min-width:0;
+  }
+  .acceso:hover{background:rgba(255,255,255,.18)}
+  .acceso .mini{width:56px; height:56px; flex:none; display:grid; place-items:center; font-size:1.4rem}
+  .acceso span{padding:0 12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0}
+
+  .seccion{padding:8px 28px 6px}
+  .seccion-head{display:flex; align-items:baseline; justify-content:space-between; margin:16px 0 12px}
+  .seccion-head h2{font-size:1.3rem; font-weight:800}
+  .seccion-head a{color:var(--gris); font-size:.78rem; font-weight:700; letter-spacing:.08em; text-decoration:none}
+  .seccion-head a:hover{text-decoration:underline; color:var(--texto)}
+  .cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(158px,1fr)); gap:16px}
+  .card{
+    background:var(--panel); border-radius:8px; padding:14px; cursor:pointer;
+    transition:background .25s; position:relative; border:none; text-align:left; color:var(--texto);
+  }
+  .card:hover{background:var(--panel-hover)}
+  .cover{
+    width:100%; aspect-ratio:1; border-radius:6px; margin-bottom:12px;
+    display:grid; place-items:center; font-size:2.3rem;
+    box-shadow:0 8px 22px rgba(0,0,0,.45); position:relative; overflow:hidden;
+  }
+  .cover::after{content:""; position:absolute; inset:0; background:linear-gradient(160deg,rgba(255,255,255,.14),transparent 45%)}
+  .card h3{font-size:.95rem; font-weight:700; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .card p{color:var(--gris); font-size:.8rem; line-height:1.4; min-height:2.2em}
+  .play-btn{
+    position:absolute; right:22px; bottom:74px; width:44px; height:44px; border-radius:50%;
+    background:var(--verde); border:none; display:grid; place-items:center; cursor:pointer;
+    opacity:0; transform:translateY(8px); transition:all .25s; box-shadow:0 6px 16px rgba(0,0,0,.5);
+  }
+  .card:hover .play-btn{opacity:1; transform:translateY(0)}
+  .play-btn:hover{transform:scale(1.06); background:var(--verde-hover)}
+  .play-btn svg{margin-left:2px}
+
+  footer.credito{
+    padding:26px 28px calc(26px); color:#6a6a6a; font-size:.72rem; line-height:1.6;
+    border-top:1px solid var(--linea); margin-top:22px;
+  }
+  footer.credito b{color:var(--gris)}
+
+  /* ============ PLAYER ============ */
+  .player{
+    grid-row:2; grid-column:1 / -1; background:#181818; border-top:1px solid var(--linea);
+    display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px; padding:0 16px;
+  }
+  .ahora{display:flex; align-items:center; gap:11px; min-width:0}
+  .ahora .mini-cover{
+    width:52px; height:52px; border-radius:5px; flex:none; display:grid; place-items:center;
+    font-size:1.3rem; background:linear-gradient(135deg,#333,#222);
+  }
+  .ahora .datos{min-width:0}
+  .ahora .t{font-size:.85rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .ahora .a{font-size:.72rem; color:var(--gris); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .like{background:none; border:none; color:var(--gris); cursor:pointer; padding:6px; flex:none}
+  .like:hover{color:var(--texto)}
+  .like.on{color:var(--verde)}
+
+  .controles{display:flex; flex-direction:column; align-items:center; gap:6px; width:min(480px,44vw)}
+  .botones{display:flex; align-items:center; gap:18px}
+  .ctrl{background:none; border:none; color:var(--gris); cursor:pointer; padding:4px; display:grid; place-items:center}
+  .ctrl:hover{color:var(--texto)}
+  .ctrl.play{
+    width:36px; height:36px; border-radius:50%; background:var(--texto); color:#000;
+    transition:transform .12s;
+  }
+  .ctrl.play:hover{transform:scale(1.07); color:#000}
+  .tiempo{display:flex; align-items:center; gap:9px; width:100%}
+  .tiempo span{font-size:.68rem; color:var(--gris); font-variant-numeric:tabular-nums; min-width:34px}
+  .tiempo span:last-child{text-align:right}
+  .barra{
+    flex:1; height:4px; background:#4d4d4d; border-radius:2px; cursor:pointer; position:relative;
+  }
+  .barra .fill{height:100%; width:0%; background:var(--texto); border-radius:2px; position:relative}
+  .barra:hover .fill{background:var(--verde)}
+  .barra:hover .fill::after{
+    content:""; position:absolute; right:-5px; top:50%; transform:translateY(-50%);
+    width:11px; height:11px; border-radius:50%; background:#fff;
+  }
+
+  .extras{display:flex; align-items:center; justify-content:flex-end; gap:12px}
+  .eq{display:flex; align-items:flex-end; gap:2.5px; height:18px; width:24px}
+  .eq i{
+    width:3.5px; background:var(--verde); border-radius:1px;
+    animation:eqmove 1s ease-in-out infinite; animation-play-state:paused;
+  }
+  .eq i:nth-child(1){height:35%; animation-delay:0s}
+  .eq i:nth-child(2){height:90%; animation-delay:.25s}
+  .eq i:nth-child(3){height:55%; animation-delay:.5s}
+  .eq i:nth-child(4){height:75%; animation-delay:.12s}
+  body.sonando .eq i{animation-play-state:running}
+  @keyframes eqmove{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+  .vol{display:flex; align-items:center; gap:7px; color:var(--gris)}
+  .vol .barra{width:88px; flex:none}
+  .vol .fill{width:70%}
+
+  /* ============ SCROLLBAR / RESPONSIVE ============ */
+  ::-webkit-scrollbar{width:12px}
+  ::-webkit-scrollbar-thumb{background:#3a3a3a; border-radius:6px; border:3px solid var(--fondo)}
+
+  @media (max-width:760px){
+    body{grid-template-columns:1fr}
+    aside{display:none}
+    main{grid-column:1}
+    .accesos{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .cards{grid-template-columns:repeat(auto-fill,minmax(132px,1fr)); gap:12px}
+    .player{grid-template-columns:1fr auto; padding:0 12px}
+    .extras{display:none}
+    .controles{width:auto}
+    .tiempo{display:none}
+    .hero,.seccion{padding-left:16px; padding-right:16px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SIDEBAR ============ -->
+<aside>
+  <div class="logo">
+    <div class="logo-mark" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3v10.55A4 4 0 1 0 11 17V7h6V3H9z"/></svg>
+    </div>
+    <b>Spotify Clone<small>proyecto de clase</small></b>
+  </div>
+  <nav>
+    <a href="#" class="activo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 3 10v11h6v-7h6v7h6V10l-9-7z"/></svg>
+      Inicio</a>
+    <a href="#">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
+      Buscar</a>
+    <a href="#">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4v16M9 4v16M14 5.5l5.5 14"/></svg>
+      Tu biblioteca</a>
+  </nav>
+  <hr class="sep">
+  <div class="pl-titulo">PLAYLISTS</div>
+  <div class="pl">
+    <a href="#">Coding Focus 💻</a>
+    <a href="#">NCS Releases</a>
+    <a href="#">Lofi Beats</a>
+    <a href="#">Big Room Anthems</a>
+    <a href="#">Progressive House</a>
+    <a href="#">Melodic EDM</a>
+    <a href="#">Chill Electronic</a>
+  </div>
+</aside>
+
+<!-- ============ MAIN ============ -->
+<main>
+  <section class="hero">
+    <h1 id="saludo">Buenas noches</h1>
+    <div class="accesos" id="accesos"></div>
+  </section>
+
+  <section class="seccion">
+    <div class="seccion-head"><h2>Hecho para ti</h2><a href="#">MOSTRAR TODO</a></div>
+    <div class="cards" id="cards-mix"></div>
+  </section>
+
+  <section class="seccion">
+    <div class="seccion-head"><h2>Tus artistas favoritos</h2><a href="#">MOSTRAR TODO</a></div>
+    <div class="cards" id="cards-artistas"></div>
+  </section>
+
+  <footer class="credito">
+    <b>Spotify Clone</b> — proyecto educativo del curso <b>Tecnologías en Internet</b> (UAB, 2026), construido
+    con HTML, CSS y JavaScript puros, sin frameworks. Interfaz inspirada en Spotify® con fines exclusivamente
+    didácticos; sin afiliación con Spotify AB ni uso de su logotipo. Los nombres de artistas y canciones
+    aparecen solo como maqueta demostrativa: este sitio <b>no reproduce ni distribuye audio</b>.
+    💚 Hecho aprendiendo — igual que tu proyecto.
+  </footer>
+</main>
+
+<!-- ============ PLAYER ============ -->
+<div class="player">
+  <div class="ahora">
+    <div class="mini-cover" id="p-cover" aria-hidden="true">🎵</div>
+    <div class="datos">
+      <div class="t" id="p-titulo">Elige una canción</div>
+      <div class="a" id="p-artista">Toca cualquier tarjeta para "reproducir"</div>
+    </div>
+    <button class="like" id="btn-like" aria-label="Me gusta">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M12 20.5c-5.2-3.6-8.5-6.7-8.5-10.4C3.5 7.2 5.7 5 8.3 5c1.5 0 3 .8 3.7 2 .7-1.2 2.2-2 3.7-2 2.6 0 4.8 2.2 4.8 5.1 0 3.7-3.3 6.8-8.5 10.4z"/></svg>
+    </button>
+  </div>
+
+  <div class="controles">
+    <div class="botones">
+      <button class="ctrl" id="btn-prev" aria-label="Anterior">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2.5v14H6zM20 5v14L9.5 12 20 5z"/></svg>
+      </button>
+      <button class="ctrl play" id="btn-play" aria-label="Reproducir o pausar">
+        <svg id="ico-play" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" style="margin-left:2px"><path d="M7 4.5v15l13-7.5-13-7.5z"/></svg>
+        <svg id="ico-pause" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6.5 4.5h3.8v15H6.5zM13.7 4.5h3.8v15h-3.8z"/></svg>
+      </button>
+      <button class="ctrl" id="btn-next" aria-label="Siguiente">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 5H18v14h-2.5zM4 5v14l10.5-7L4 5z"/></svg>
+      </button>
+    </div>
+    <div class="tiempo">
+      <span id="t-actual">0:00</span>
+      <div class="barra" id="barra" aria-label="Barra de progreso"><div class="fill" id="fill"></div></div>
+      <span id="t-total">0:00</span>
+    </div>
+  </div>
+
+  <div class="extras">
+    <div class="eq" id="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="vol">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9v6h4l6 5V4L8 9H4zm13.5 3a3.5 3.5 0 0 0-2-3.2v6.4a3.5 3.5 0 0 0 2-3.2z"/></svg>
+      <div class="barra"><div class="fill"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---------- datos (maqueta demostrativa, sin audio) ----------
+  const MIXES = [
+    { t:"Mix Martin Garrix",   a:"Big room y progressive del número 1.",            e:"🎧", g:"linear-gradient(135deg,#2e86de,#341f97)", s:"In the Name of Love", sa:"Martin Garrix, Bebe Rexha", dur:196 },
+    { t:"Mix Alan Walker",     a:"Melodías con capucha: el sonido Walker.",         e:"🎭", g:"linear-gradient(135deg,#0abde3,#222f3e)", s:"Faded",                sa:"Alan Walker",              dur:212 },
+    { t:"Mix Marshmello",      a:"Future bass y drops del casco blanco.",           e:"🤍", g:"linear-gradient(135deg,#8854d0,#3742fa)", s:"Alone",                sa:"Marshmello",               dur:200 },
+    { t:"NCS Releases",        a:"Electrónica copyright-free para tus streams.",    e:"⚡", g:"linear-gradient(135deg,#20bf6b,#0a3d62)", s:"On & On",              sa:"Cartoon, Daniel Levi",     dur:208 },
+    { t:"Lofi para estudiar",  a:"Beats suaves para concentrarte y rendir.",        e:"📚", g:"linear-gradient(135deg,#786fa6,#303952)", s:"Snowman",              sa:"WYS",                      dur:154 },
+    { t:"Progressive House",   a:"Melodías que suben y suben hasta el drop.",       e:"🌊", g:"linear-gradient(135deg,#4bcffa,#1e3799)", s:"Sky High",             sa:"Elektronomia",             dur:238 },
+    { t:"Big Room Anthems",    a:"Los himnos que sacuden festivales.",              e:"🔊", g:"linear-gradient(135deg,#e55039,#6f1e51)", s:"Animals",              sa:"Martin Garrix",            dur:191 },
+    { t:"Chill Electronic",    a:"Deep y chill para cerrar el día.",                e:"🌅", g:"linear-gradient(135deg,#f19066,#574b90)", s:"Force",                sa:"Alan Walker",              dur:214 },
+  ];
+  const ARTISTAS = [
+    { t:"Martin Garrix", a:"Artista · big room / progressive", e:"🎛️", g:"linear-gradient(135deg,#3867d6,#130f40)", s:"Scared to Be Lonely", sa:"Martin Garrix, Dua Lipa", dur:220 },
+    { t:"Alan Walker",   a:"Artista · electro house",          e:"🕶️", g:"linear-gradient(135deg,#45aaf2,#2c3e50)", s:"Spectre",             sa:"Alan Walker",             dur:203 },
+    { t:"Marshmello",    a:"Artista · future bass",            e:"🍦", g:"linear-gradient(135deg,#d1d8e0,#4b6584)", s:"Happier",             sa:"Marshmello, Bastille",    dur:214 },
+    { t:"K-391",         a:"Productor · NCS / electrónica",    e:"🎹", g:"linear-gradient(135deg,#26de81,#1e3799)", s:"Ignite",              sa:"K-391, Alan Walker",      dur:211 },
+    { t:"Elektronomia",  a:"Productor · NCS house",            e:"⚡", g:"linear-gradient(135deg,#fed330,#e15f41)", s:"Energy",              sa:"Elektronomia",            dur:238 },
+    { t:"Tobu",          a:"Productor · melodic EDM",          e:"🌈", g:"linear-gradient(135deg,#fc5c65,#7d5fff)", s:"Hope",                sa:"Tobu",                    dur:225 },
+    { t:"Cartoon",       a:"Dúo · NCS / drum & bass",          e:"🎨", g:"linear-gradient(135deg,#00d8d6,#3742fa)", s:"Why We Lose",         sa:"Cartoon, Coleman Trapp",  dur:221 },
+    { t:"Janji",         a:"Productor · NCS melódico",         e:"🚀", g:"linear-gradient(135deg,#a55eea,#182848)", s:"Heroes Tonight",      sa:"Janji, Johnning",         dur:208 },
+  ];
+  const TODAS = [...MIXES, ...ARTISTAS];
+
+  // ---------- saludo según la hora ----------
+  const h = new Date().getHours();
+  document.getElementById("saludo").textContent =
+    h < 12 ? "Buenos días" : h < 19 ? "Buenas tardes" : "Buenas noches";
+
+  // ---------- render ----------
+  const svgPlay = '<svg width="19" height="19" viewBox="0 0 24 24" fill="#000"><path d="M7 4.5v15l13-7.5-13-7.5z"/></svg>';
+  function cardHTML(item, idx, esArtista){
+    const forma = esArtista ? "border-radius:50%" : "";
+    return `<button class="card" data-i="${idx}">
+      <div class="cover" style="background:${item.g};${forma}"><span>${item.e}</span></div>
+      <h3>${item.t}</h3><p>${item.a}</p>
+      <span class="play-btn" aria-hidden="true">${svgPlay}</span>
+    </button>`;
+  }
+  document.getElementById("cards-mix").innerHTML =
+    MIXES.map((m,i)=>cardHTML(m,i,false)).join("");
+  document.getElementById("cards-artistas").innerHTML =
+    ARTISTAS.map((m,i)=>cardHTML(m,i+MIXES.length,true)).join("");
+  document.getElementById("accesos").innerHTML =
+    MIXES.slice(0,6).map((m,i)=>`<button class="acceso" data-i="${i}">
+      <span class="mini" style="background:${m.g}">${m.e}</span><span>${m.t}</span>
+    </button>`).join("");
+
+  // ---------- player simulado ----------
+  const fmt = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`;
+  let actual = null, seg = 0, sonando = false, timer = null;
+
+  const $ = id => document.getElementById(id);
+  const icoPlay = $("ico-play"), icoPause = $("ico-pause");
+
+  function cargar(i){
+    actual = TODAS[i]; seg = 0;
+    $("p-titulo").textContent = actual.s || actual.t;
+    $("p-artista").textContent = actual.sa || actual.a;
+    $("p-cover").style.background = actual.g;
+    $("p-cover").textContent = actual.e;
+    $("t-total").textContent = fmt(actual.dur);
+    $("btn-like").classList.remove("on");
+    reproducir(true);
+  }
+  function pintar(){
+    $("t-actual").textContent = fmt(seg);
+    $("fill").style.width = (actual ? (seg/actual.dur)*100 : 0) + "%";
+  }
+  function reproducir(on){
+    if(!actual) return;
+    sonando = on;
+    document.body.classList.toggle("sonando", on);
+    icoPlay.style.display  = on ? "none" : "";
+    icoPause.style.display = on ? "" : "none";
+    clearInterval(timer);
+    if(on) timer = setInterval(()=>{
+      seg++;
+      if(seg >= actual.dur) siguiente();
+      pintar();
+    }, 1000);
+  }
+  function siguiente(paso = 1){
+    const i = actual ? (TODAS.indexOf(actual) + paso + TODAS.length) % TODAS.length : 0;
+    cargar(i);
+  }
+
+  document.querySelectorAll("[data-i]").forEach(el =>
+    el.addEventListener("click", ()=>cargar(+el.dataset.i)));
+  $("btn-play").addEventListener("click", ()=>{ actual ? reproducir(!sonando) : cargar(0); });
+  $("btn-next").addEventListener("click", ()=>siguiente(1));
+  $("btn-prev").addEventListener("click", ()=>siguiente(-1));
+  $("btn-like").addEventListener("click", e => e.currentTarget.classList.toggle("on"));
+  $("barra").addEventListener("click", e=>{
+    if(!actual) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    seg = Math.floor(((e.clientX - r.left)/r.width) * actual.dur);
+    pintar();
+  });
+
+  // ---------- guiño para quien abra DevTools (los vimos en la S1 😉) ----------
+  console.log(
+    "%c♪ Spotify Clone — Tecnologías en Internet (UAB)\n" +
+    "%cSi estás leyendo esto, ya sabes usar DevTools. Bien ahí. 🕵️\n" +
+    "Este sitio es HTML + CSS + JS puros: míralo en la pestaña Elements.",
+    "color:#1db954;font-size:14px;font-weight:bold", "color:#b3b3b3"
+  );
+</script>
+</body>
+</html>
